@@ -4,47 +4,42 @@
 
 
 <div class="container">
+  <h4>Brand Buying Rate</h4>
+  <div class="rate-chart" style="width: 75%; margin: auto;">
+    
+    <canvas id="buyRateChart"></canvas>
 
-  <div class="rate-chart" style="width: 50%;">
-  <canvas id="buyRateChart"></canvas>
 
-</div>
-<div class="retailer-affinity">
-  <h2>Bordered Table</h2>
-  <p>The .table-bordered class adds borders to a table:</p>
-
-  <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Brands
-    <span class="caret"></span></button>
-    <ul class="dropdown-menu">
-      {% for brand in brands %}
-        <li><a href="#">{{ brand }}</a></li>
-      {% endfor %}
-    </ul>
   </div>
-  <p></p>  
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>Retailer</th>
-        <th>Affinity</th>
-      </tr>
+  <p>Brand with Top Buying Rate: 
+    {% for brand in top_buy_rate_brand %}
+      {{ brand }}
+    {% endfor %}
+  </p>
+  <br/>
+  <h4>Retailer Affinity</h4>
+  <div class="retailer-affinity">
+    
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" id="selected-brand" type="button" data-toggle="dropdown">Brands
+      <span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        {% for brand in brands %}
+          <li><a href="#brand" data-brand="{{ brand }}">{{ brand }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  <p></p>
+
+  <table class="table table-bordered" style="width: 75%; margin: auto;">
+    <thead class="tab-head">
     </thead>
-    <tbody>
-      <tr>
-        <td>John</td>
-        <td>Doe</td>
-      </tr>
-      <tr>
-        <td>Mary</td>
-        <td>Moe</td>
-      </tr>
-      <tr>
-        <td>July</td>
-        <td>Dooley</td>
-      </tr>
+    <tbody class="tab-body">
     </tbody>
   </table>
+  <br/>
+  <p id="tab-comment"></p>
 </div>
 </div>
 
@@ -57,14 +52,45 @@
         type: 'bar',
         data: data,
         options: {
+          scales: {
+            xAxes: [{ barPercentage: 0.5 }]
+          },
           legend: { display: false},
           title: {
-            display: true,
+            display: false,
             text: "Brand Buying Rates"
           }
               }
       });
   });
+
+  function showAffinity(results) {
+    console.log(results);
+    console.log(results.brand);
+    console.log(results.affinity);
+    $("#selected-brand").html(results.brand + " <span class='caret'></span>");
+    $("#tab-comment").html("Top Retailer Affinity: " + results.top_affinity)
+    $(".tab-head").html("<tr><th>Retailer</th><th>Affinity</th></tr>");
+    $(".tab-body").html("<tr><tr>");
+    $.each(results.affinity, function(key, value) {
+      $(".tab-body").append("<tr><td>" + key + "</td><td>" + value + "x</td></tr>");
+    });
+  }
+
+  function getBrand(evt) {
+    evt.preventDefault();
+
+    var brand = {
+      "b": $(this).data("brand")
+    };
+    console.log(brand);
+    
+
+    $.get("/affinity.json", brand, showAffinity);
+  }
+
+
+  $("a[href='#brand']").click(getBrand);
 </script>
 
 

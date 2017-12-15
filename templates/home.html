@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+<div class="container">
+
+  <div class="rate-chart" style="width: 50%;">
+  <canvas id="buyRateChart"></canvas>
+
+</div>
+<div class="retailer-affinity">
+  <h2>Bordered Table</h2>
+  <p>The .table-bordered class adds borders to a table:</p>
+
+  <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Brands
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+      {% for brand in brands %}
+        <li><a href="#">{{ brand }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <p></p>  
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Retailer</th>
+        <th>Affinity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>John</td>
+        <td>Doe</td>
+      </tr>
+      <tr>
+        <td>Mary</td>
+        <td>Moe</td>
+      </tr>
+      <tr>
+        <td>July</td>
+        <td>Dooley</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<script>
+  Chart.defaults.global.defaultFontFamily = "Arial";
+  var options = { responsive: true };
+  var ctx= $("#buyRateChart").get(0).getContext("2d");
+  $.get("/buy-rate.json", function (data) {
+      var myBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          legend: { display: false},
+          title: {
+            display: true,
+            text: "Brand Buying Rates"
+          }
+              }
+      });
+  });
+</script>
+
+
+{% endblock %}

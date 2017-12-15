@@ -1,7 +1,7 @@
 import pandas as pd
 import operator as op
 
-location = "smalldata.csv"
+location = "trips_gdrive.csv"
 
 df = pd.read_csv(location)
 

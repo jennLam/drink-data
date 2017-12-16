@@ -17,6 +17,8 @@ def index():
 
 
 def get_columns(column_name):
+    """Create a list of a column from dataframe."""
+
     items = data.df[column_name].unique()
     lst_of_items = []
 
@@ -26,6 +28,8 @@ def get_columns(column_name):
 
 
 def get_rates():
+    """Create a list of brand buying rates."""
+
     lst_of_rates = []
     brand_buy_rate = data.get_buy_rate_values()
 
@@ -34,8 +38,11 @@ def get_rates():
 
     return lst_of_rates
 
+
 @app.route("/search.json")
 def get_hh_count():
+    """Get number of households."""
+
     brand = request.args.get("brand")
     retailer = request.args.get("retailer")
     start_date = request.args.get("start_date")
@@ -46,11 +53,12 @@ def get_hh_count():
 
     return jsonify({"hh_count": hh_count})
 
+
 @app.route("/affinity.json")
 def get_affinity():
-    brand = request.args.get("b")
+    """Get retailer affinity info for selected brand."""
 
-    print brand
+    brand = request.args.get("b")
 
     affinity = data.get_retailer_affinity_values(brand)
     top_affinity = data.retailer_affinity(brand)
@@ -61,21 +69,6 @@ def get_affinity():
 @app.route("/buy-rate.json")
 def buying_rates():
     """Return data about number of events."""
-
-    # brands = data.df["Parent Brand"].unique()
-    # lst_of_brands = []
-
-    # for brand in brands:
-    #     lst_of_brands.append(brand)
-    # print brands
-
-    # brand_buy_rate = data.get_buy_rate_values()
-    # print brand_buy_rate
-
-    # lst_of_rates = []
-
-    # for brand in lst_of_brands:
-    #     lst_of_rates.append(brand_buy_rate[brand])
 
     data_dict = {"labels": get_columns("Parent Brand"),
                  "datasets": [{"data": get_rates(),

@@ -1,23 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
 
-
-
 <div class="container">
-  <h4>Brand Buying Rate</h4>
-  <div class="rate-chart" style="width: 75%; margin: auto;">
-    
+  <h4 class="title">&nbsp&nbsp<span class="glyphicon glyphicon-piggy-bank"></span>&nbsp&nbspBrand Buying Rate</h4>
+  <div class="rate-chart section">
     <canvas id="buyRateChart"></canvas>
-
-
   </div>
+
   <p>Brand with Top Buying Rate: 
     {% for brand in top_buy_rate_brand %}
       {{ brand }}
     {% endfor %}
   </p>
   <br/>
-  <h4>Retailer Affinity</h4>
+
+  <h4 class="title"><span class="glyphicon glyphicon-home"></span>&nbsp&nbspHousehold Count</h4>
+  <form class="section">
+    <div class="form-group">
+      <label for="brand">Brand:</label>
+      <select class="form-control" id="brand" name="brand">
+        <option value="">None</option>
+        {% for brand in brands %}
+          <option value="{{ brand }}">{{ brand }}</option>
+        {% endfor %}
+      </select>
+      <br/>
+      <label for="retailer">Retailer:</label>
+      <select class="form-control" id="retailer" name="retailer">
+        <option value="">None</option>
+        {% for retailer in retailers %}
+          <option value="{{ retailer }}">{{ retailer }}</option>
+        {% endfor %}
+      </select>
+      <br/>
+      <label for="start">Start Date:</label><br/>
+      <input class="form-control" type="date" id="startDate" name="start_date"><br/>
+
+      <label for="end">End Date:</label><br/>
+      <input class="form-control" type="date" id="endDate" name="end_date">
+
+    </div>
+    <button id="hh-button" type="submit" class="btn btn-default">Submit</button>
+  </form>
+  <br/>
+  <p id="searchResults"></p>
+  <br/>
+
+  <h4 class="title"><span class="glyphicon glyphicon-tags"></span>&nbsp&nbspRetailer Affinity</h4>
   <div class="retailer-affinity">
     
     <div class="dropdown">
@@ -32,7 +61,7 @@
 
   <p></p>
 
-  <table class="table table-bordered" style="width: 75%; margin: auto;">
+  <table class="table table-bordered section">
     <thead class="tab-head">
     </thead>
     <tbody class="tab-body">
@@ -63,6 +92,29 @@
               }
       });
   });
+
+function showResults(results) {
+  $("#searchResults").html("Number of Households: " + results.hh_count)
+  
+}
+
+function getHh(evt) {
+  evt.preventDefault();
+
+  var searchInputs = {
+    "brand": $("#brand").val(),
+    "retailer": $("#retailer").val(),
+    "start_date": $("#startDate").val(),
+    "end_date": $("#endDate").val()
+  };
+
+  console.log(searchInputs);
+
+  $.get("/search.json", searchInputs, showResults);
+
+}
+
+$("#hh-button").on("click", getHh);
 
   function showAffinity(results) {
     console.log(results);

@@ -1,0 +1,15 @@
+body {
+  font-family: Arial;
+  color: #454545;
+  font-size: 10pt;
+}
+
+.title {
+    font-family: 'Anton', sans-serif;
+    text-transform: uppercase;
+}
+
+.section {
+    width: 75%;
+    margin: auto;
+}

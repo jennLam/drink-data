@@ -40,7 +40,13 @@ class InfoScoutData(object):
 
             condition = self.df[b & r]
 
-        return condition["Item Units"].sum()
+        total = condition["Item Units"].sum()
+
+        # If total is not a number (nan), set total to 0
+        if total != total:
+            total = 0
+
+        return total
 
     def calc_affinity(self, brand, retailer):
         """Calculate retailer affinity index for brand."""
@@ -50,15 +56,14 @@ class InfoScoutData(object):
         # P(B) is the % of item units of retailer purchased
         # P(A U B) is the % of item units of brand and retailer purchased
 
+        affinity_index = 0
+
         pab = float(self.get_total_units(brand, retailer))/self.get_total_units() * 100
         pa = float(self.get_total_units(brand=brand))/self.get_total_units() * 100
         pb = float(self.get_total_units(retailer=retailer))/self.get_total_units() * 100
 
-        affinity_index = round(pab/(pa * pb) * 100, 2)
-
-        # If the affinity index is not a number (nan), set affinity index to 0
-        if affinity_index != affinity_index:
-            affinity_index = 0
+        if pab != 0.0:
+            affinity_index = round(pab/(pa * pb) * 100, 2)
 
         return affinity_index
 
@@ -117,13 +122,19 @@ class InfoScoutData(object):
     def calc_buy_rate(self, brand):
         """Return the buying rate for a brand."""
 
-        dollars_spent = self.df[self.df["Parent Brand"] == brand]["Item Dollars"].sum()
-        household = self.count_hhs(brand)
+        buy_rate = 0
 
-        # Buying rate calculated by:
-        # Total dollars spent buying brand items / Total household that bought brand items
+        if brand in self.df["Parent Brand"].unique():
 
-        return round(float(dollars_spent)/household, 2)
+            dollars_spent = self.df[self.df["Parent Brand"] == brand]["Item Dollars"].sum()
+            household = self.count_hhs(brand)
+
+            # Buying rate calculated by:
+            # Total dollars spent buying brand items / Total household that bought brand items
+
+            buy_rate = round(float(dollars_spent)/household, 2)
+
+        return buy_rate
 
     def get_buy_rate_values(self):
         """Create a dictionary of brands and buying rates."""

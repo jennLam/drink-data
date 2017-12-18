@@ -1,5 +1,5 @@
 Create and launch virtual environment
-	$ virtualenv env
+	$ virtualenv env (for windows, virtualenv env --always-copy)
 	$ source env/bin/activate
 
 Install requirements
@@ -8,5 +8,5 @@ Install requirements
 Launch server
 	$ python server.py
 
-Open browser and enter
+Open browser and go to
 	http://localhost:5000/

@@ -6,7 +6,6 @@ class InfoScoutData(object):
 
     def __init__(self, location):
         self.location = location
-# location = "trips_gdrive.csv"
         self.df = pd.read_csv(location)
 
         # Format columns in dataframe (convert date to datetime and dollars to int).

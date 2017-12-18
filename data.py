@@ -1,146 +1,143 @@
 import pandas as pd
 import operator as op
 
-location = "trips_gdrive.csv"
 
-df = pd.read_csv(location)
+class InfoScoutData(object):
 
-df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
+    def __init__(self, location):
+        self.location = location
+# location = "trips_gdrive.csv"
+        self.df = pd.read_csv(location)
 
-# remove dollar signs
-df["Item Dollars"] = df["Item Dollars"].replace({"\$": ""}, regex=True)
+        # Format columns in dataframe (convert date to datetime and dollars to int).
+        self.df["Date"] = pd.to_datetime(self.df["Date"], format="%m/%d/%Y")
+        self.df["Item Dollars"] = self.df["Item Dollars"].replace({"\$": ""}, regex=True)
+        self.df["Item Dollars"] = pd.to_numeric(self.df["Item Dollars"])
 
-# convert to int
-df["Item Dollars"] = pd.to_numeric(df["Item Dollars"])
+    def search_criteria(self, column_name, target, operator):
+        """Specify search condition for dataframe."""
 
+        if column_name not in list(self.df):
+            return
 
-def search_criteria(column_name, target, operator):
-    """Specify search condition for dataframe."""
+        result = None
 
-    result = None
+        if target:
+            result = operator(self.df[column_name], target)
+        else:
+            result = self.df[column_name] is not None
 
-    if target:
-        result = operator(df[column_name], target)
-    else:
-        result = df[column_name] is not None
+        return result
 
-    return result
+    def get_total_units(self, brand=None, retailer=None):
+        """Returns the total number of item units for specific retailer and/or brand."""
 
+        condition = self.df
 
-def get_total_units(brand=None, retailer=None):
-    """Returns the total number of item units for specific retailer and/or brand."""
+        if brand or retailer:
+            b = self.search_criteria("Parent Brand", brand, op.eq)
+            r = self.search_criteria("Retailer", retailer, op.eq)
 
-    condition = df
+            condition = self.df[b & r]
 
-    if brand or retailer:
-        b = search_criteria("Parent Brand", brand, op.eq)
-        r = search_criteria("Retailer", retailer, op.eq)
+        return condition["Item Units"].sum()
 
-        condition = df[b & r]
+    def calc_affinity(self, brand, retailer):
+        """Calculate retailer affinity index for brand."""
 
-    return condition["Item Units"].sum()
+        # P(A U B) / P(A) * P(B) * 100
+        # P(A) is the % of item units of brand purchased
+        # P(B) is the % of item units of retailer purchased
+        # P(A U B) is the % of item units of brand and retailer purchased
 
+        pab = float(self.get_total_units(brand, retailer))/self.get_total_units() * 100
+        pa = float(self.get_total_units(brand=brand))/self.get_total_units() * 100
+        pb = float(self.get_total_units(retailer=retailer))/self.get_total_units() * 100
 
-def calc_affinity(brand, retailer):
-    """Calculate retailer affinity index for brand."""
+        affinity_index = round(pab/(pa * pb) * 100, 2)
 
-    # P(A U B) / P(A) * P(B) * 100
-    # P(A) is the % of item units of brand purchased
-    # P(B) is the % of item units of retailer purchased
-    # P(A U B) is the % of item units of brand and retailer purchased
+        # If the affinity index is not a number (nan), set affinity index to 0
+        if affinity_index != affinity_index:
+            affinity_index = 0
 
-    pab = float(get_total_units(brand, retailer))/get_total_units() * 100
-    pa = float(get_total_units(brand=brand))/get_total_units() * 100
-    pb = float(get_total_units(retailer=retailer))/get_total_units() * 100
+        return affinity_index
 
-    affinity_index = round(pab/(pa * pb) * 100, 2)
+    def get_retailer_affinity_values(self, brand):
+        """Create a dictionary of retailer affinity indices for a brand."""
 
-    # If the affinity index is not a number (nan), set affinity index to 0
-    if affinity_index != affinity_index:
-        affinity_index = 0
+        retailer_affinity_dict = {}
 
-    return affinity_index
+        for retailer in self.df["Retailer"].unique():
+            retailer_affinity_dict[retailer] = self.calc_affinity(brand, retailer)
 
+        return retailer_affinity_dict
 
-def get_retailer_affinity_values(brand):
-    """Create a dictionary of retailer affinity indices for a brand."""
+    def get_dict_max(self, dictionary):
+        """Return a list of keys for the max value."""
 
-    retailer_affinity_dict = {}
+        max_keys_lst = []
 
-    for retailer in df["Retailer"].unique():
-        retailer_affinity_dict[retailer] = calc_affinity(brand, retailer)
+        max_value = max(dictionary.values())
 
-    return retailer_affinity_dict
+        for key, value in dictionary.items():
+            if value == max_value:
+                max_keys_lst.append(key)
 
+        return max_keys_lst
 
-def get_dict_max(dictionary):
-    """Return a list of keys for the max value."""
+    def retailer_affinity(self, focus_brand):
+        """Return the strongest retailer affinity for focus brand relative to other brands."""
 
-    max_keys_lst = []
+        if focus_brand not in self.df["Parent Brand"].unique():
+            return None
 
-    max_value = max(dictionary.values())
+        retailer_affinity_dict = self.get_retailer_affinity_values(focus_brand)
 
-    for key, value in dictionary.items():
-        if value == max_value:
-            max_keys_lst.append(key)
+        return self.get_dict_max(retailer_affinity_dict)
 
-    return max_keys_lst
+    def count_hhs(self, brand=None, retailer=None, start_date=None, end_date=None):
+        """Return number of households."""
 
+        condition = self.df
 
-def retailer_affinity(focus_brand):
-    """Return the strongest retailer affinity for focus brand relative to other brands."""
+        if brand or retailer or start_date or end_date:
 
-    retailer_affinity_dict = get_retailer_affinity_values(focus_brand)
+            b = self.search_criteria("Parent Brand", brand, op.eq)
+            r = self.search_criteria("Retailer", retailer, op.eq)
+            sd = self.search_criteria("Date", start_date, op.ge)
+            ed = self.search_criteria("Date", end_date, op.le)
 
-    return get_dict_max(retailer_affinity_dict)
+            condition = self.df[b & r & sd & ed]
 
+        # Household determined by User ID
+        # Each User ID is a household
 
-def count_hhs(brand=None, retailer=None, start_date=None, end_date=None):
-    """Return number of households."""
+        return len(condition["User ID"].unique())
 
-    condition = df
+    def calc_buy_rate(self, brand):
+        """Return the buying rate for a brand."""
 
-    if brand or retailer or start_date or end_date:
+        dollars_spent = self.df[self.df["Parent Brand"] == brand]["Item Dollars"].sum()
+        household = self.count_hhs(brand)
 
-        b = search_criteria("Parent Brand", brand, op.eq)
-        r = search_criteria("Retailer", retailer, op.eq)
-        sd = search_criteria("Date", start_date, op.ge)
-        ed = search_criteria("Date", end_date, op.le)
+        # Buying rate calculated by:
+        # Total dollars spent buying brand items / Total household that bought brand items
 
-        condition = df[b & r & sd & ed]
+        return round(float(dollars_spent)/household, 2)
 
-    # Household determined by User ID
-    # Each User ID is a household
+    def get_buy_rate_values(self):
+        """Create a dictionary of brands and buying rates."""
 
-    return len(condition["User ID"].unique())
+        brand_buy_rate_dict = {}
 
+        for brand in self.df["Parent Brand"].unique():
+            brand_buy_rate_dict[brand] = self.calc_buy_rate(brand)
 
-def calc_buy_rate(brand):
-    """Return the buying rate for a brand."""
+        return brand_buy_rate_dict
 
-    dollars_spent = df[df["Parent Brand"] == brand]["Item Dollars"].sum()
-    household = count_hhs(brand)
+    def top_buying_brand(self):
+        """Identify brand with top buying rate."""
 
-    # Buying rate calculated by:
-    # Total dollars spent buying brand items / Total household that bought brand items
+        brand_buy_rate_dict = self.get_buy_rate_values()
 
-    return round(float(dollars_spent)/household, 2)
-
-
-def get_buy_rate_values():
-    """Create a dictionary of brands and buying rates."""
-
-    brand_buy_rate_dict = {}
-
-    for brand in df["Parent Brand"].unique():
-        brand_buy_rate_dict[brand] = calc_buy_rate(brand)
-
-    return brand_buy_rate_dict
-
-
-def top_buying_brand():
-    """Identify brand with top buying rate."""
-
-    brand_buy_rate_dict = get_buy_rate_values()
-
-    return get_dict_max(brand_buy_rate_dict)
+        return self.get_dict_max(brand_buy_rate_dict)

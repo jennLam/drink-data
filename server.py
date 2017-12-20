@@ -1,13 +1,13 @@
 from flask import Flask, render_template, jsonify, request
 from jinja2 import StrictUndefined
-from data import InfoScoutData
+from data import DrinkData
 
 
 app = Flask(__name__)
 
 app.jinja_env.undefined = StrictUndefined
 
-isd = InfoScoutData("trips_gdrive.csv")
+isd = DrinkData("trips_gdrive.csv")
 
 
 @app.route("/")

@@ -2,13 +2,13 @@ import unittest
 import pandas as pd
 import operator as op
 import pandas.util.testing as pdt
-from data import InfoScoutData
+from data import DrinkData
 
 
 class TestCase(unittest.TestCase):
 
     # Create instance with test data
-    test_isd = InfoScoutData("testing_data.csv")
+    test_isd = DrinkData("testing_data.csv")
 
     def test_search_criteria(self):
         """Test for search_criteria."""

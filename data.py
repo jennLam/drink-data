@@ -2,7 +2,7 @@ import pandas as pd
 import operator as op
 
 
-class InfoScoutData(object):
+class DrinkData(object):
 
     def __init__(self, location):
         self.location = location

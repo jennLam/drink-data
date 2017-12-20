@@ -2,8 +2,6 @@
 
 Drink Data is a web application that analyzes a large set of energy drink data, calculates metrics and visualizes results.
 
-# Screenshot
-
 ![alt text](https://i.imgur.com/ah4hvHt.png "Homepage")
 
 ### Tech
